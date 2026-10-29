@@ -1,0 +1,83 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button aria-label="Abrir menú"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <h1 class="titulo">Cuadro de mando</h1>
+
+  @if (loading) {
+    <div class="center" role="status" aria-live="polite">
+      <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+      <p>Cargando datos de Supabase y Firestore...</p>
+    </div>
+  }
+  @if (error) {
+    <ion-text color="danger"><p role="alert">{{ error }}</p></ion-text>
+  }
+
+  @if (!loading && !error) {
+    <ion-select
+      class="filtro"
+      label="Filtrar por categoría"
+      labelPlacement="stacked"
+      fill="outline"
+      value="todas"
+      (ionChange)="onFiltro($event.detail.value)"
+    >
+      <ion-select-option value="todas">Todas</ion-select-option>
+      @for (c of categorias; track c) {
+        <ion-select-option [value]="c">{{ c }}</ion-select-option>
+      }
+    </ion-select>
+
+    <ion-grid>
+      <ion-row>
+        <ion-col size="6" size-md="3">
+          <app-stat-widget title="Total" [value]="incidenciasFiltradas.length" icon="alert-circle"></app-stat-widget>
+        </ion-col>
+        <ion-col size="6" size-md="3">
+          <app-stat-widget title="Abiertas" [value]="abiertas" icon="folder-open"></app-stat-widget>
+        </ion-col>
+        <ion-col size="6" size-md="3">
+          <app-stat-widget title="Cerradas" [value]="cerradas" icon="checkmark-circle"></app-stat-widget>
+        </ion-col>
+        <ion-col size="6" size-md="3">
+          <app-stat-widget title="Comentarios" [value]="comentarios.length" icon="time-outline"></app-stat-widget>
+        </ion-col>
+      </ion-row>
+
+      <ion-row>
+        <ion-col size="12" size-md="6">
+          <h2>Incidencias por estado</h2>
+          <div class="chart-box">
+            <canvas baseChart [data]="porEstado" [options]="opcionesBarras" type="bar" role="img"
+              [attr.aria-label]="'Gráfico de barras por estado: ' + resumenEstado"></canvas>
+          </div>
+        </ion-col>
+        <ion-col size="12" size-md="6">
+          <h2>Incidencias por categoría</h2>
+          <div class="chart-box">
+            <canvas baseChart [data]="porCategoria" [options]="opcionesDonut" type="doughnut" role="img"
+              [attr.aria-label]="'Gráfico circular por categoría: ' + resumenCategoria"></canvas>
+          </div>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    <div class="acciones" role="group" aria-label="Exportar informe">
+      <ion-button (click)="exportCsv()">
+        <ion-icon slot="start" name="download-outline" aria-hidden="true"></ion-icon>
+        Exportar CSV
+      </ion-button>
+      <ion-button (click)="exportPdf()">
+        <ion-icon slot="start" name="document-text-outline" aria-hidden="true"></ion-icon>
+        Exportar PDF
+      </ion-button>
+    </div>
+  }
+</ion-content>
