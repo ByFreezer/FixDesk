@@ -1,3 +1,7 @@
-<p>
-  stat-widget works!
-</p>
+<ion-card role="group" [attr.aria-label]="title + ': ' + value">
+  <ion-card-content>
+    <ion-icon [name]="icon" aria-hidden="true"></ion-icon>
+    <p class="widget-title">{{ title }}</p>
+    <p class="value">{{ value }}</p>
+  </ion-card-content>
+</ion-card>
