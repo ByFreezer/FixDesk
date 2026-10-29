@@ -1,0 +1,57 @@
+.banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  background: #eef3f8;
+  border-radius: 12px;
+  padding: 16px;
+
+  img {
+    width: 160px;
+    height: auto;
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    color: #1a3a5c;
+  }
+
+  p {
+    margin: 0;
+    color: #3a3a3a;
+  }
+}
+
+/* Mobile-first: en pantallas grandes la imagen va a la izquierda */
+@media (min-width: 768px) {
+  .banner {
+    flex-direction: row;
+    text-align: left;
+  }
+}
+
+.center {
+  text-align: center;
+  padding: 32px 0;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 16px;
+}
+
+.detalle {
+  margin: 16px 0 80px;
+  padding: 16px;
+  border-left: 4px solid #1a3a5c;
+  background: #f8f9fa;
+  border-radius: 8px;
+
+  h2 {
+    margin-top: 0;
+  }
+}

@@ -1,0 +1,37 @@
+<ion-searchbar [(ngModel)]="search" placeholder="Buscar..." aria-label="Buscar en la tabla"></ion-searchbar>
+
+<div role="region" aria-label="Tabla de datos" tabindex="0">
+  <table aria-label="Tabla de registros">
+    <caption class="sr-only">Tabla de datos del sistema de gestión</caption>
+    <thead>
+      <tr>
+        @for (c of columns; track c.key) { <th scope="col">{{ c.label }}</th> }
+        @if (canDelete) { <th scope="col">Acciones</th> }
+      </tr>
+    </thead>
+    <tbody>
+      @for (row of filteredData; track $index) {
+        <tr (click)="rowSelected.emit(row)" (keydown.enter)="rowSelected.emit(row)" tabindex="0"
+            [attr.aria-label]="'Ver detalle de ' + (columns.length ? row[columns[0].key] : 'fila')">
+          @for (c of columns; track c.key) {
+            <td [attr.data-label]="c.label">{{ row[c.key] }}</td>
+          }
+          @if (canDelete) {
+            <td data-label="Acciones">
+              <ion-button color="danger" size="small" fill="outline"
+                (click)="$event.stopPropagation(); deleteClicked.emit(row)"
+                [attr.aria-label]="'Eliminar ' + (columns.length ? row[columns[0].key] : 'registro')">
+                Eliminar
+              </ion-button>
+            </td>
+          }
+        </tr>
+      }
+      @empty {
+        <tr><td [attr.colspan]="columns.length + (canDelete ? 1 : 0)" style="text-align:center; padding:20px;">
+          No se encontraron registros.
+        </td></tr>
+      }
+    </tbody>
+  </table>
+</div>

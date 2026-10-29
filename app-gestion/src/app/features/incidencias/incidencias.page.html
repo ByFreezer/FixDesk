@@ -1,0 +1,77 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button aria-label="Abrir menú"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Incidencias</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <section class="banner" aria-label="Presentación">
+    <img src="assets/img/soporte.svg" alt="Ilustración de un técnico revisando incidencias en un ordenador" width="160" height="120" />
+    <div>
+      <h1>Registro de incidencias</h1>
+      <p>Consulta, busca y gestiona las incidencias técnicas de la empresa.</p>
+    </div>
+  </section>
+
+  @if (loading) {
+    <div class="center" role="status" aria-live="polite">
+      <ion-spinner name="crescent" aria-hidden="true"></ion-spinner>
+      <p>Cargando incidencias...</p>
+    </div>
+  } @else if (error) {
+    <ion-text color="danger">
+      <p role="alert">{{ error }}</p>
+    </ion-text>
+    <ion-button (click)="cargar()">Reintentar</ion-button>
+  } @else {
+    <ion-grid>
+      <ion-row>
+        <ion-col size="12" size-sm="4">
+          <app-stat-widget title="Total" [value]="incidencias.length" icon="alert-circle"></app-stat-widget>
+        </ion-col>
+        <ion-col size="12" size-sm="4">
+          <app-stat-widget title="Abiertas" [value]="abiertas" icon="folder-open"></app-stat-widget>
+        </ion-col>
+        <ion-col size="12" size-sm="4">
+          <app-stat-widget title="En proceso" [value]="enProceso" icon="time-outline"></app-stat-widget>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+
+    <div class="acciones" role="group" aria-label="Exportar informe">
+      <ion-button fill="outline" (click)="exportCsv()">
+        <ion-icon slot="start" name="download-outline" aria-hidden="true"></ion-icon>
+        Exportar CSV
+      </ion-button>
+      <ion-button fill="outline" (click)="exportPdf()">
+        <ion-icon slot="start" name="document-text-outline" aria-hidden="true"></ion-icon>
+        Exportar PDF
+      </ion-button>
+    </div>
+
+    <app-data-table
+      [data]="incidencias"
+      [columns]="columns"
+      [canDelete]="esAdmin"
+      (rowSelected)="onSelect($event)"
+      (deleteClicked)="onDelete($event)"
+    ></app-data-table>
+
+    @if (seleccionada) {
+      <section class="detalle" aria-live="polite" aria-label="Detalle de la incidencia seleccionada">
+        <h2>{{ seleccionada.codigo }} · {{ seleccionada.titulo }}</h2>
+        <p>{{ seleccionada.descripcion }}</p>
+        <p><strong>Responsable:</strong> {{ seleccionada.usuario }}</p>
+      </section>
+    }
+  }
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="nueva()" aria-label="Crear nueva incidencia">
+      <ion-icon name="add" aria-hidden="true"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>

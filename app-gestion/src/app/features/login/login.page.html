@@ -1,0 +1,84 @@
+<ion-content class="login-content">
+  <main class="login-wrapper">
+    <ion-card class="login-card">
+      <ion-card-header class="login-header">
+        <img class="logo" src="assets/img/logo.svg" alt="Logotipo de FixDesk" width="72" height="72" />
+        <h1>FixDesk</h1>
+        <p>Sistema de gestión de incidencias</p>
+      </ion-card-header>
+
+      <ion-card-content>
+        <h2 class="form-title">Iniciar sesión</h2>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" aria-label="Formulario de inicio de sesión" novalidate>
+
+          <ion-item lines="inset">
+            <ion-input
+              formControlName="email"
+              type="email"
+              autocomplete="username"
+              label="Correo electrónico"
+              labelPlacement="floating"
+              placeholder="usuario@empresa.com"
+              aria-required="true"
+            ></ion-input>
+          </ion-item>
+          @if (loginForm.get('email')?.touched && loginForm.get('email')?.errors) {
+            <ion-note color="danger" class="validation-error" role="alert">
+              @if (loginForm.get('email')?.errors?.['required']) {
+                El correo electrónico es obligatorio.
+              }
+              @if (loginForm.get('email')?.errors?.['email']) {
+                Introduce un correo electrónico válido.
+              }
+            </ion-note>
+          }
+
+          <ion-item lines="inset" class="password-item">
+            <ion-input
+              formControlName="password"
+              type="password"
+              autocomplete="current-password"
+              label="Contraseña"
+              labelPlacement="floating"
+              placeholder="Introduce tu contraseña"
+              aria-required="true"
+            ></ion-input>
+          </ion-item>
+          @if (loginForm.get('password')?.touched && loginForm.get('password')?.errors) {
+            <ion-note color="danger" class="validation-error" role="alert">
+              @if (loginForm.get('password')?.errors?.['required']) {
+                La contraseña es obligatoria.
+              }
+              @if (loginForm.get('password')?.errors?.['minlength']) {
+                La contraseña debe tener al menos 6 caracteres.
+              }
+            </ion-note>
+          }
+
+          @if (errorMessage) {
+            <ion-text color="danger" class="server-error">
+              <p role="alert">{{ errorMessage }}</p>
+            </ion-text>
+          }
+
+          <ion-button type="submit" expand="block" color="primary" [disabled]="loginForm.invalid || isLoading" class="submit-btn">
+            @if (isLoading) {
+              <ion-spinner name="crescent" aria-label="Cargando"></ion-spinner>
+            } @else {
+              Iniciar sesión
+            }
+          </ion-button>
+        </form>
+
+        <div class="quick-login" role="group" aria-label="Acceso rápido con usuarios de prueba">
+          <ion-button expand="block" fill="outline" color="dark" (click)="quickLogin('admin')" [disabled]="isLoading">
+            Acceder como Admin
+          </ion-button>
+          <ion-button expand="block" fill="outline" color="dark" (click)="quickLogin('usuario')" [disabled]="isLoading">
+            Acceder como Usuario
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </main>
+</ion-content>

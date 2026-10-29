@@ -1,0 +1,194 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-back-button text="Volver" defaultHref="/incidencias" aria-label="Volver a incidencias"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Nueva Incidencia</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <h1 class="titulo">Registrar incidencia</h1>
+  <form [formGroup]="form" (ngSubmit)="onSubmit()" aria-label="Crear nueva incidencia">
+
+    <!-- Código -->
+    <ion-item lines="inset">
+      <ion-input
+        formControlName="codigo"
+        type="text"
+        label="Código"
+        labelPlacement="floating"
+        placeholder="INC-0001"
+        aria-label="Código de incidencia"
+        aria-required="true"
+      ></ion-input>
+    </ion-item>
+    @if (form.get('codigo')?.pending) {
+      <ion-note color="medium" class="validation-info" role="status" aria-live="polite">
+        <ion-spinner name="dots" aria-hidden="true"></ion-spinner> Verificando...
+      </ion-note>
+    }
+    @if (form.get('codigo')?.touched && form.get('codigo')?.errors) {
+      <ion-note color="danger" class="validation-error" role="alert" aria-live="polite">
+        @if (form.get('codigo')?.errors?.['required']) {
+          El código es obligatorio.
+        }
+        @if (form.get('codigo')?.errors?.['pattern']) {
+          El formato debe ser INC-XXXX (ej: INC-0001).
+        }
+        @if (form.get('codigo')?.errors?.['codigoExiste']) {
+          Este código ya existe.
+        }
+      </ion-note>
+    }
+
+    <!-- Título -->
+    <ion-item lines="inset">
+      <ion-input
+        formControlName="titulo"
+        type="text"
+        label="Título"
+        labelPlacement="floating"
+        placeholder="Título de la incidencia"
+        aria-label="Título de la incidencia"
+        aria-required="true"
+      ></ion-input>
+    </ion-item>
+    @if (form.get('titulo')?.touched && form.get('titulo')?.errors) {
+      <ion-note color="danger" class="validation-error" role="alert" aria-live="polite">
+        @if (form.get('titulo')?.errors?.['required']) {
+          El título es obligatorio.
+        }
+        @if (form.get('titulo')?.errors?.['minlength']) {
+          El título debe tener al menos 5 caracteres.
+        }
+      </ion-note>
+    }
+
+    <!-- Categoría -->
+    <ion-item lines="inset">
+      <ion-select
+        formControlName="categoria"
+        label="Categoría"
+        labelPlacement="floating"
+        placeholder="Seleccionar categoría"
+        aria-label="Categoría de la incidencia"
+        aria-required="true"
+      >
+        @for (cat of categorias; track cat) {
+          <ion-select-option [value]="cat">{{ cat }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+    @if (form.get('categoria')?.touched && form.get('categoria')?.errors?.['required']) {
+      <ion-note color="danger" class="validation-error" role="alert" aria-live="polite">
+        La categoría es obligatoria.
+      </ion-note>
+    }
+
+    <!-- Prioridad -->
+    <ion-item lines="inset">
+      <ion-select
+        formControlName="prioridad"
+        label="Prioridad"
+        labelPlacement="floating"
+        placeholder="Seleccionar prioridad"
+        aria-label="Prioridad de la incidencia"
+        aria-required="true"
+      >
+        @for (pri of prioridades; track pri) {
+          <ion-select-option [value]="pri">{{ pri }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+    @if (form.get('prioridad')?.touched && form.get('prioridad')?.errors?.['required']) {
+      <ion-note color="danger" class="validation-error" role="alert" aria-live="polite">
+        La prioridad es obligatoria.
+      </ion-note>
+    }
+
+    <!-- Estado -->
+    <ion-item lines="inset">
+      <ion-select
+        formControlName="estado"
+        label="Estado"
+        labelPlacement="floating"
+        placeholder="Seleccionar estado"
+        aria-label="Estado de la incidencia"
+        aria-required="true"
+      >
+        @for (est of estados; track est) {
+          <ion-select-option [value]="est">{{ est }}</ion-select-option>
+        }
+      </ion-select>
+    </ion-item>
+    @if (form.get('estado')?.touched && form.get('estado')?.errors?.['required']) {
+      <ion-note color="danger" class="validation-error" role="alert" aria-live="polite">
+        El estado es obligatorio.
+      </ion-note>
+    }
+
+    <!-- Descripción -->
+    <ion-item lines="inset">
+      <ion-textarea
+        formControlName="descripcion"
+        label="Descripción"
+        labelPlacement="floating"
+        placeholder="Descripción detallada de la incidencia"
+        aria-label="Descripción de la incidencia"
+        aria-required="true"
+        [autoGrow]="true"
+        rows="3"
+      ></ion-textarea>
+    </ion-item>
+    @if (form.get('descripcion')?.touched && form.get('descripcion')?.errors) {
+      <ion-note color="danger" class="validation-error" role="alert" aria-live="polite">
+        @if (form.get('descripcion')?.errors?.['required']) {
+          La descripción es obligatoria.
+        }
+        @if (form.get('descripcion')?.errors?.['minlength']) {
+          La descripción debe tener al menos 10 caracteres.
+        }
+      </ion-note>
+    }
+
+    <!-- Usuario -->
+    <ion-item lines="inset">
+      <ion-input
+        formControlName="usuario"
+        type="email"
+        label="Usuario (email)"
+        labelPlacement="floating"
+        placeholder="usuario@empresa.com"
+        aria-label="Email del usuario asignado"
+        aria-required="true"
+      ></ion-input>
+    </ion-item>
+    @if (form.get('usuario')?.touched && form.get('usuario')?.errors) {
+      <ion-note color="danger" class="validation-error" role="alert" aria-live="polite">
+        @if (form.get('usuario')?.errors?.['required']) {
+          El usuario es obligatorio.
+        }
+        @if (form.get('usuario')?.errors?.['email']) {
+          Introduce un correo electrónico válido.
+        }
+      </ion-note>
+    }
+
+    <!-- Submit -->
+    <ion-button
+      type="submit"
+      expand="block"
+      color="primary"
+      [disabled]="form.invalid || isSubmitting"
+      aria-label="Guardar incidencia"
+      class="submit-btn"
+    >
+      @if (isSubmitting) {
+        <ion-spinner name="crescent" aria-label="Guardando"></ion-spinner>
+      } @else {
+        Guardar Incidencia
+      }
+    </ion-button>
+  </form>
+</ion-content>
