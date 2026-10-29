@@ -1,31 +1,52 @@
 <ion-app>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
   <ion-split-pane contentId="main-content">
-    <ion-menu contentId="main-content" type="overlay">
+    <ion-menu contentId="main-content" type="overlay" [disabled]="!user" aria-label="Menú principal">
       <ion-content>
-        <ion-list id="inbox-list">
-          <ion-list-header>Inbox</ion-list-header>
-          <ion-note>hi&#64;ionicframework.com</ion-note>
+        <div class="menu-brand">
+          <img src="assets/img/logo.svg" alt="Logotipo de FixDesk" width="48" height="48" />
+          <div>
+            <p class="brand-name">FixDesk</p>
+            <p class="brand-sub">Gestión de incidencias</p>
+          </div>
+        </div>
 
-          @for (p of appPages; track p; let i = $index) {
-            <ion-menu-toggle auto-hide="false">
-              <ion-item routerDirection="root" [routerLink]="[p.url]" lines="none" detail="false" routerLinkActive="selected">
-                <ion-icon aria-hidden="true" slot="start" [ios]="p.icon + '-outline'" [md]="p.icon + '-sharp'"></ion-icon>
-                <ion-label>{{ p.title }}</ion-label>
-              </ion-item>
-            </ion-menu-toggle>
+        <ion-list id="menu-list">
+          @if (user) {
+            <ion-list-header>{{ user.nombre }}</ion-list-header>
+            <ion-note>
+              {{ user.email }}
+              <ion-badge [color]="user.rol === 'admin' ? 'danger' : 'primary'">
+                {{ user.rol === 'admin' ? 'Administrador' : 'Usuario' }}
+              </ion-badge>
+            </ion-note>
           }
+
+          <nav aria-label="Navegación principal">
+            @for (p of paginas; track p.url) {
+              <ion-menu-toggle [autoHide]="false">
+                <ion-item
+                  routerDirection="root"
+                  [routerLink]="[p.url]"
+                  [routerLinkActiveOptions]="{ exact: true }"
+                  lines="none"
+                  [detail]="false"
+                  routerLinkActive="selected"
+                >
+                  <ion-icon aria-hidden="true" slot="start" [ios]="p.icon + '-outline'" [md]="p.icon + '-sharp'"></ion-icon>
+                  <ion-label>{{ p.title }}</ion-label>
+                </ion-item>
+              </ion-menu-toggle>
+            }
+          </nav>
         </ion-list>
 
-        <ion-list id="labels-list">
-          <ion-list-header>Labels</ion-list-header>
-
-          @for (label of labels; track label) {
-            <ion-item lines="none">
-              <ion-icon aria-hidden="true" slot="start" ios="bookmark-outline" md="bookmark-sharp"></ion-icon>
-              <ion-label>{{ label }}</ion-label>
-            </ion-item>
-          }
-        </ion-list>
+        <ion-menu-toggle [autoHide]="false">
+          <ion-button expand="block" fill="outline" color="danger" class="logout-btn" (click)="logout()">
+            <ion-icon slot="start" name="log-out-outline" aria-hidden="true"></ion-icon>
+            Cerrar sesión
+          </ion-button>
+        </ion-menu-toggle>
       </ion-content>
     </ion-menu>
     <ion-router-outlet id="main-content"></ion-router-outlet>

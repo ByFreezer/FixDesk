@@ -1,0 +1,41 @@
+.contenedor {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  img {
+    width: 180px;
+    height: auto;
+  }
+
+  h1 {
+    margin: 0 0 4px;
+    color: #1a3a5c;
+  }
+
+  p {
+    margin: 0;
+    color: #3a3a3a;
+  }
+}
+
+@media (min-width: 768px) {
+  .intro {
+    flex-direction: row;
+    text-align: left;
+  }
+}
+
+ol {
+  margin: 0;
+  padding-left: 20px;
+  line-height: 1.6;
+}
