@@ -1,4 +1,4 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonMenuButton, IonFab,
@@ -35,6 +35,7 @@ export class IncidenciasPage implements ViewDidEnter, OnDestroy {
   private router = inject(Router);
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
+  private cdr = inject(ChangeDetectorRef);
   private sub?: Subscription;
 
   columns: Column[] = [
@@ -78,10 +79,12 @@ export class IncidenciasPage implements ViewDidEnter, OnDestroy {
       next: (data) => {
         this.incidencias = [...data];
         this.loading = false;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.error = 'No se pudieron cargar las incidencias.';
         this.loading = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -105,6 +108,7 @@ export class IncidenciasPage implements ViewDidEnter, OnDestroy {
             this.incSrv.delete(row.id).subscribe(async () => {
               this.incidencias = this.incidencias.filter((i) => i.id !== row.id);
               if (this.seleccionada?.id === row.id) this.seleccionada = null;
+              this.cdr.markForCheck();
               const toast = await this.toastCtrl.create({
                 message: 'Incidencia eliminada',
                 duration: 2000,

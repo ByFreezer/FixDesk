@@ -1,4 +1,4 @@
-import { Component, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote,
@@ -37,6 +37,7 @@ interface MenuPage {
 export class AppComponent implements OnDestroy {
   private auth = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
   private sub: Subscription;
 
   /** Usuario logueado (null si no hay sesión) */
@@ -63,6 +64,7 @@ export class AppComponent implements OnDestroy {
     this.sub = this.auth.currentUser$.subscribe((u) => {
       this.user = u;
       this.paginas = this.todasLasPaginas.filter((p) => !p.soloAdmin || u?.rol === 'admin');
+      this.cdr.markForCheck();
     });
   }
 

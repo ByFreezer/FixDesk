@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, OnInit, inject } from '@angular/core';
 import { ChartData, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import {
@@ -32,6 +32,7 @@ export class DashboardPage implements OnInit, OnDestroy {
   private incSrv = inject(IncidenciasService);
   private comSrv = inject(ComentariosService);
   private exportSrv = inject(ExportService);
+  private cdr = inject(ChangeDetectorRef);
   private sub?: Subscription;
 
   loading = true;
@@ -81,6 +82,8 @@ export class DashboardPage implements OnInit, OnDestroy {
           this.actualizar();
         }
         this.loading = false;
+        // Sin zone.js hay que avisar a Angular de que hay cambios
+        this.cdr.markForCheck();
       });
   }
 
