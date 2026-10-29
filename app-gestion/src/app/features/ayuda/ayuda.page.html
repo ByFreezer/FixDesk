@@ -1,0 +1,37 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start">
+      <ion-menu-button aria-label="Abrir menú"></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Ayuda</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="contenedor">
+    <section class="intro">
+      <img src="assets/img/ayuda.svg" alt="Ilustración de un libro abierto con un signo de interrogación" width="180" height="140" />
+      <div>
+        <h1>Manual de usuario</h1>
+        <p>Aquí tienes una guía rápida para usar FixDesk. Pulsa cada apartado para desplegarlo.</p>
+      </div>
+    </section>
+
+    <ion-accordion-group>
+      @for (s of secciones; track s.id) {
+        <ion-accordion [value]="s.id">
+          <ion-item slot="header">
+            <ion-label>{{ s.titulo }}</ion-label>
+          </ion-item>
+          <div slot="content" class="ion-padding">
+            <ol>
+              @for (paso of s.pasos; track $index) {
+                <li>{{ paso }}</li>
+              }
+            </ol>
+          </div>
+        </ion-accordion>
+      }
+    </ion-accordion-group>
+  </div>
+</ion-content>

@@ -1,0 +1,15 @@
+{
+  "name": "FixDesk - Gestión de incidencias",
+  "short_name": "FixDesk",
+  "description": "Aplicación de gestión de incidencias técnicas (PWA)",
+  "lang": "es",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#1a3a5c",
+  "icons": [
+    { "src": "assets/img/logo.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "assets/icon/favicon.png", "sizes": "64x64", "type": "image/png" }
+  ]
+}
