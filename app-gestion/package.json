@@ -1,7 +1,7 @@
 {
   "name": "app-gestion",
   "version": "0.0.1",
-  "author": "Ionic Framework",
+  "author": "Héctor Fernández",
   "homepage": "https://ionicframework.com/",
   "scripts": {
     "ng": "ng",
@@ -9,13 +9,18 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "lint": "ng lint"
+    "lint": "ng lint",
+    "test:ci": "ng test --watch=false",
+    "docs": "npx -y @compodoc/compodoc -p tsconfig.app.json -d documentation -n \"FixDesk - Documentación técnica\" --hideGenerator",
+    "docs:serve": "npx -y @compodoc/compodoc -p tsconfig.app.json -d documentation -s",
+    "build:vercel": "ng build && (npx -y @compodoc/compodoc -p tsconfig.app.json -d www/docs -n \"FixDesk - Documentación técnica\" --hideGenerator || echo \"Aviso: no se pudo generar la documentación\")"
   },
   "private": true,
   "dependencies": {
     "@angular/common": "22.2.3",
     "@angular/compiler": "22.2.3",
     "@angular/core": "22.2.3",
+    "@angular/fire": "^20.1.1",
     "@angular/forms": "22.2.3",
     "@angular/platform-browser": "22.2.3",
     "@angular/router": "22.2.3",
@@ -25,7 +30,13 @@
     "@capacitor/keyboard": "8.0.6",
     "@capacitor/status-bar": "8.0.4",
     "@ionic/angular": "^9.0.0",
+    "@supabase/supabase-js": "^2.118.0",
+    "chart.js": "^4.6.1",
+    "firebase": "^13.1.0",
     "ionicons": "^8.1.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.9",
+    "ng2-charts": "^11.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
@@ -43,5 +54,5 @@
     "typescript-eslint": "^8.61.0",
     "vitest": "~5.0.5"
   },
-  "description": "An Ionic project"
+  "description": "FixDesk - Sistema de gestión de incidencias (Ionic + Angular)"
 }
