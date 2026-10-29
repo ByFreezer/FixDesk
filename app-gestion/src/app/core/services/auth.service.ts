@@ -1,89 +1,154 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, of } from 'rxjs';
-import { delay, tap } from 'rxjs/operators';
+import { Injectable, inject } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { Observable, of, throwError, timer } from 'rxjs';
+import { switchMap, tap } from 'rxjs/operators';
 import { User, UserRole } from '../models/user.model';
+import { AuthStore } from '../state/auth.store';
+import { sha256 } from '../utils/sha256';
+import { crearToken, verificarToken } from '../utils/jwt';
 
-@Injectable({
-  providedIn: 'root'
-})
+/** Usuario de prueba: la contraseña NO se guarda, solo su hash SHA-256 */
+interface UsuarioDemo extends User {
+  passwordHash: string;
+}
+
+/**
+ * Servicio de autenticación.
+ * - Comprueba la contraseña comparando hashes SHA-256 (nunca en texto plano).
+ * - Genera un token JWT firmado que caduca a las 8 horas.
+ * - Guarda el estado en el AuthStore (patrón Redux).
+ */
+@Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly STORAGE_KEY = 'app_gestion_user';
+  private store = inject(AuthStore);
 
-  // Usuarios predefinidos de prueba exigidos en las especificaciones del proyecto
-  private readonly DEMO_USERS: Array<User & { password: string }> = [
+  private readonly STORAGE_KEY = 'fixdesk_token';
+  private readonly SALT = 'fixdesk-2026';
+  /** Clave de firma del token de la demo (no es una clave de ningún servicio externo) */
+  private readonly CLAVE_FIRMA = 'fixdesk-demo-signing-key';
+  private readonly DURACION_HORAS = 8;
+
+  /** Usuarios ficticios de prueba (datos sintéticos) */
+  private readonly USUARIOS: UsuarioDemo[] = [
     {
       id: 'usr-1',
       email: 'admin@empresa.com',
-      nombre: 'Héctor Fernández (Admin)',
-      password: 'Admin123!',
+      nombre: 'Administrador Demo',
       rol: 'admin',
-      avatar: 'assets/icon/favicon.png'
+      passwordHash: 'b7d688c0c404a0536a68add5bcd7ca3f313c6b80b251e7717749142bd9c7c5ac',
     },
     {
       id: 'usr-2',
       email: 'usuario@empresa.com',
-      nombre: 'Carlos López (Estándar)',
-      password: 'User123!',
+      nombre: 'Usuario Demo',
       rol: 'usuario',
-      avatar: 'assets/icon/favicon.png'
-    }
+      passwordHash: '8a394d6e10a4013da2024605af06c7ed78d0fb02029996090d43a92a6e80c5a2',
+    },
   ];
 
-  private currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
-  public currentUser$: Observable<User | null> = this.currentUserSubject.asObservable();
+  /** Usuario actual como Observable (para quien lo prefiera a los signals) */
+  readonly currentUser$: Observable<User | null> = toObservable(this.store.user);
 
-  constructor() {}
-
-  public get currentUserValue(): User | null {
-    return this.currentUserSubject.value;
+  get currentUserValue(): User | null {
+    return this.store.user();
   }
 
-  public isAuthenticated(): boolean {
-    return this.currentUserValue !== null;
+  /** Token actual (lo usa el interceptor HTTP) */
+  get token(): string | null {
+    return this.store.token();
   }
 
-  public isAdmin(): boolean {
-    return this.currentUserValue?.rol === 'admin';
+  /** Hay sesión y el token sigue siendo válido (firma correcta y sin caducar) */
+  isAuthenticated(): boolean {
+    if (!this.store.isLoggedIn()) return false;
+    if (!verificarToken(this.store.token(), this.CLAVE_FIRMA)) {
+      this.logout();
+      return false;
+    }
+    return true;
   }
 
-  public hasRole(role: UserRole): boolean {
-    return this.currentUserValue?.rol === role;
+  isAdmin(): boolean {
+    return this.store.isAdmin();
   }
 
-  public login(email: string, password: string): Observable<User> {
-    const user = this.DEMO_USERS.find(
-      u => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password
+  hasRole(role: UserRole): boolean {
+    return this.store.user()?.rol === role;
+  }
+
+  /**
+   * Inicia sesión.
+   * @param email Correo del usuario
+   * @param password Contraseña escrita en el formulario
+   */
+  login(email: string, password: string): Observable<User> {
+    this.store.dispatch({ type: '[Auth] Login' });
+
+    return timer(300).pipe(
+      switchMap(() => {
+        const hash = sha256(`${this.SALT}:${password}`);
+        const encontrado = this.USUARIOS.find(
+          (u) => u.email === (email || '').trim().toLowerCase() && u.passwordHash === hash
+        );
+
+        if (!encontrado) {
+          const error = 'Credenciales incorrectas. Verifique correo y contraseña.';
+          this.store.dispatch({ type: '[Auth] Login Failure', error });
+          return throwError(() => new Error(error));
+        }
+
+        const { passwordHash: _, ...user } = encontrado;
+        const ahora = Math.floor(Date.now() / 1000);
+        const token = crearToken(
+          { sub: user.id, email: user.email, nombre: user.nombre, rol: user.rol, iat: ahora, exp: ahora + this.DURACION_HORAS * 3600 },
+          this.CLAVE_FIRMA
+        );
+        return of({ user, token });
+      }),
+      tap(({ user, token }) => {
+        this.guardarToken(token);
+        this.store.dispatch({ type: '[Auth] Login Success', user, token });
+      }),
+      switchMap(({ user }) => of(user))
     );
+  }
 
-    if (user) {
-      const { password: _, ...userData } = user;
-      return of(userData).pipe(
-        delay(300),
-        tap(u => {
-          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(u));
-          this.currentUserSubject.next(u);
-        })
-      );
+  /** Cierra la sesión y borra el token */
+  logout(): void {
+    try {
+      sessionStorage.removeItem(this.STORAGE_KEY);
+    } catch {
+      /* sin almacenamiento disponible */
+    }
+    this.store.dispatch({ type: '[Auth] Logout' });
+  }
+
+  /**
+   * Recupera la sesión al recargar la página.
+   * Si alguien modifica el token a mano (por ejemplo para cambiarse el rol),
+   * la firma deja de coincidir y la sesión se descarta.
+   */
+  restoreSession(): void {
+    let token: string | null = null;
+    try {
+      token = sessionStorage.getItem(this.STORAGE_KEY);
+    } catch {
+      token = null;
+    }
+    const payload = verificarToken(token, this.CLAVE_FIRMA);
+    if (token && payload) {
+      const user: User = { id: payload.sub, email: payload.email, nombre: payload.nombre, rol: payload.rol };
+      this.store.dispatch({ type: '[Auth] Login Success', user, token });
     } else {
-      return new Observable(observer => {
-        setTimeout(() => {
-          observer.error(new Error('Credenciales incorrectas. Verifique correo y contraseña.'));
-        }, 300);
-      });
+      this.logout();
     }
   }
 
-  public logout(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
-    this.currentUserSubject.next(null);
-  }
-
-  private getStoredUser(): User | null {
+  private guardarToken(token: string): void {
     try {
-      const raw = localStorage.getItem(this.STORAGE_KEY);
-      return raw ? JSON.parse(raw) : null;
+      sessionStorage.setItem(this.STORAGE_KEY, token);
     } catch {
-      return null;
+      /* sin almacenamiento disponible */
     }
   }
 }

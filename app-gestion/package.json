@@ -13,7 +13,7 @@
     "test:ci": "ng test --watch=false",
     "docs": "npx -y @compodoc/compodoc -p tsconfig.app.json -d documentation -n \"FixDesk - Documentación técnica\" --hideGenerator",
     "docs:serve": "npx -y @compodoc/compodoc -p tsconfig.app.json -d documentation -s",
-    "build:vercel": "ng build && (npx -y @compodoc/compodoc -p tsconfig.app.json -d www/docs -n \"FixDesk - Documentación técnica\" --hideGenerator || echo \"Aviso: no se pudo generar la documentación\")"
+    "build:vercel": "npm run test:ci && ng build && (npx -y @compodoc/compodoc -p tsconfig.app.json -d www/docs -n \"FixDesk - Documentación técnica\" --hideGenerator || echo \"Aviso: no se pudo generar la documentación\")"
   },
   "private": true,
   "dependencies": {
@@ -50,6 +50,7 @@
     "jsdom": "^30.1.1",
     "typescript": "~6.0.0",
     "typescript-eslint": "^8.61.0",
+    "vite": "~8.3.0",
     "vitest": "~5.0.5"
   },
   "description": "FixDesk - Sistema de gestión de incidencias (Ionic + Angular)"
