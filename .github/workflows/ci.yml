@@ -1,0 +1,45 @@
+# Integración continua: compila, pasa los tests y genera la documentación
+# en cada push y en cada Pull Request a main o develop.
+name: CI
+
+on:
+  push:
+    branches: [main, develop, 'feature/**']
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app-gestion
+
+    steps:
+      - name: Descargar el código
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: app-gestion/package-lock.json
+
+      - name: Instalar dependencias
+        run: npm install --no-audit --no-fund
+
+      - name: Compilar para producción
+        run: npm run build
+
+      - name: Tests unitarios
+        run: npm run test:ci
+
+      - name: Generar documentación (Compodoc)
+        run: npm run docs
+
+      - name: Guardar la documentación como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: documentacion-compodoc
+          path: app-gestion/documentation
