@@ -13,7 +13,7 @@
     "test:ci": "ng test --watch=false",
     "docs": "npx -y @compodoc/compodoc -p tsconfig.app.json -d documentation -n \"FixDesk - Documentación técnica\" --hideGenerator",
     "docs:serve": "npx -y @compodoc/compodoc -p tsconfig.app.json -d documentation -s",
-    "build:vercel": "ng build && (npx -y @compodoc/compodoc -p tsconfig.app.json -d www/docs -n \"FixDesk - Documentación técnica\" --hideGenerator || echo \"Aviso: no se pudo generar la documentación\")"
+    "build:vercel": "npm run test:ci && ng build && (npx -y @compodoc/compodoc -p tsconfig.app.json -d www/docs -n \"FixDesk - Documentación técnica\" --hideGenerator || echo \"Aviso: no se pudo generar la documentación\")"
   },
   "private": true,
   "dependencies": {

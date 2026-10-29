@@ -20,14 +20,9 @@ Tiene login con dos roles, listado de incidencias con buscador, formulario de al
 
 ## Credenciales de prueba
 
-Son usuarios **ficticios** solo para probar la app (no son datos reales):
-
-| Rol | Email | Contraseña |
-|-----|-------|------------|
-| Administrador | admin@empresa.com | Admin123! |
-| Usuario estándar | usuario@empresa.com | User123! |
-
-En la pantalla de login también hay botones de acceso rápido.
+Hay dos usuarios **ficticios** (uno Administrador y otro Usuario estándar). Sus contraseñas
+**no están en el repositorio**: en el código solo se guarda su hash SHA-256 y se entregan al
+profesor en el documento PDF de la actividad.
 
 ## Tecnologías
 
@@ -36,7 +31,7 @@ En la pantalla de login también hay botones de acceso rápido.
 | UI | Ionic 9 |
 | Framework | Angular 22 (standalone, Reactive Forms, RxJS) |
 | Gráficos | Chart.js + ng2-charts |
-| Datos SQL | Supabase (PostgreSQL vía API REST) |
+| Datos SQL | Supabase (PostgreSQL vía API REST con HttpClient) |
 | Datos NoSQL | Comentarios en tiempo real simulados (estilo Firestore, con `BehaviorSubject`) |
 | Exportación | jsPDF + jspdf-autotable (PDF) y CSV propio |
 | Documentación | Compodoc |
@@ -74,6 +69,9 @@ src/app/
 ## Qué se ha hecho en cada fase
 
 **Fase 1 (RA 1 y 2)**
+- Seguridad: las contraseñas solo se guardan como hash SHA-256 y al iniciar sesión se genera un **token JWT firmado (HMAC-SHA256)** que caduca a las 8 horas. Si alguien lo modifica (por ejemplo para cambiarse el rol) la firma deja de coincidir y la sesión se cierra.
+- Estado global predecible con un **store estilo Redux** (`core/state/auth.store.ts`): estado único, acciones y reductor puro.
+- **Interceptores HTTP** (`core/interceptors`): uno añade las cabeceras a cada petición y otro gestiona los errores 401.
 - Menú lateral (Side Menu) con lazy loading en todas las rutas (`loadComponent`).
 - `authGuard` protege todas las páginas y `roleGuard` deja el Dashboard solo al administrador.
 - El menú cambia según el rol y tiene botón de cerrar sesión.
@@ -98,6 +96,8 @@ src/app/
 **Fase 5 (RA 6 y 7)**
 - Git Flow: ramas `main`, `develop` y `feature/*`, fusionadas con `--no-ff`.
 - Workflow de GitHub Actions (`.github/workflows/ci.yml`): compila, pasa los tests y genera la documentación.
+- **Los tests bloquean el despliegue**: Vercel ejecuta `npm run test:ci` antes de compilar; si un test falla, no se publica.
+- Cambios integrados en `main` mediante **Pull Requests**.
 - Documentación generada con Compodoc (`npm run docs`) y publicada en `/docs` del despliegue.
 - Manual de usuario en esta página y dentro de la app (menú → **Ayuda**).
 
@@ -111,31 +111,17 @@ src/app/
 
 ## Tabla de Supabase
 
-La app lee la tabla `incidencias`. Si hay que crearla, en el SQL Editor de Supabase:
+La app usa la tabla `incidencias`. El script `supabase/setup.sql` añade las columnas que faltan,
+crea las políticas de acceso para la demo y carga datos de ejemplo (ficticios). Se ejecuta una vez
+en **Supabase → SQL Editor**.
 
-```sql
-create table if not exists incidencias (
-  id text primary key,
-  codigo text unique not null,
-  titulo text not null,
-  categoria text not null,
-  prioridad text not null,
-  estado text not null,
-  descripcion text,
-  usuario text,
-  fecha date default current_date
-);
-
-alter table incidencias enable row level security;
-create policy "acceso demo" on incidencias for all using (true) with check (true);
-```
-
-> La clave que hay en `environments` es la clave **publishable** de Supabase, pensada para ir en el frontend. No hay claves secretas en el repositorio.
+> La clave que hay en `environments` es la clave **publishable** de Supabase, pensada para ir en el
+> frontend (equivale a la antigua *anon key*). No hay claves secretas en el repositorio.
 
 ## Manual de usuario
 
 ### Iniciar sesión
-1. Escribe tu correo y contraseña y pulsa **Iniciar sesión** (o usa los botones de acceso rápido).
+1. Escribe tu correo y contraseña y pulsa **Iniciar sesión**.
 2. El administrador entra al **Dashboard** y el usuario estándar a **Incidencias**.
 
 ### Incidencias

@@ -69,15 +69,6 @@ export class LoginPage implements ViewWillEnter {
     });
   }
 
-  quickLogin(role: 'admin' | 'usuario'): void {
-    if (role === 'admin') {
-      this.loginForm.setValue({ email: 'admin@empresa.com', password: 'Admin123!' });
-    } else {
-      this.loginForm.setValue({ email: 'usuario@empresa.com', password: 'User123!' });
-    }
-    this.onSubmit();
-  }
-
   private irSegunRol(rol: string): void {
     this.router.navigate([rol === 'admin' ? '/dashboard' : '/incidencias'], { replaceUrl: true });
   }
