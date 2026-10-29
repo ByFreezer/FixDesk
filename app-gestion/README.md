@@ -10,8 +10,8 @@
 | | |
 |---|---|
 | Repositorio | https://github.com/ByFreezer/FixDesk |
-| Aplicación en producción | _(pegar aquí la URL de Vercel)_ |
-| Documentación técnica | `<URL de Vercel>/docs/` (se genera con Compodoc en cada despliegue) |
+| Aplicación en producción | https://fix-desk-freezer4.vercel.app |
+| Documentación técnica | https://fix-desk-freezer4.vercel.app/docs/ (se genera con Compodoc en cada despliegue) |
 
 ## Descripción
 
