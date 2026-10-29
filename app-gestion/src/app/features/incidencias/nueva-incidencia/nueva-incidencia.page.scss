@@ -1,0 +1,46 @@
+form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+ion-item {
+  --background: transparent;
+  margin-bottom: 4px;
+  margin-top: 8px;
+}
+
+.validation-error {
+  display: block;
+  font-size: 0.8rem;
+  padding: 2px 16px 4px;
+}
+
+.validation-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  padding: 2px 16px 4px;
+
+  ion-spinner {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.submit-btn {
+  margin-top: 24px;
+}
+
+@media (max-width: 480px) {
+  form {
+    max-width: 100%;
+  }
+}
+
+.titulo {
+  max-width: 600px;
+  margin: 0 auto 8px;
+  font-size: 1.4rem;
+  color: #1a3a5c;
+}
