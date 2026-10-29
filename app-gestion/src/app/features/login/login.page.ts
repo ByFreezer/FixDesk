@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
@@ -25,6 +25,7 @@ export class LoginPage implements ViewWillEnter {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   loginForm: FormGroup = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
@@ -57,11 +58,13 @@ export class LoginPage implements ViewWillEnter {
       next: (user) => {
         this.isLoading = false;
         this.loginForm.reset();
+        this.cdr.markForCheck();
         this.irSegunRol(user.rol);
       },
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.message || 'Error al iniciar sesión';
+        this.cdr.markForCheck();
       },
     });
   }

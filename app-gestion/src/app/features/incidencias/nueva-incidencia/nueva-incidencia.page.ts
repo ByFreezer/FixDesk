@@ -1,4 +1,5 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   FormBuilder,
   FormGroup,
@@ -60,6 +61,7 @@ export class NuevaIncidenciaPage {
   private router = inject(Router);
   private incidenciasService = inject(IncidenciasService);
   private toastCtrl = inject(ToastController);
+  private cdr = inject(ChangeDetectorRef);
 
   isSubmitting = false;
 
@@ -76,6 +78,11 @@ export class NuevaIncidenciaPage {
     descripcion: ['', [Validators.required, Validators.minLength(10)]],
     usuario: ['', [Validators.required, Validators.email]],
   });
+
+  constructor() {
+    // El validador asíncrono termina fuera de un evento: avisamos a Angular
+    this.form.statusChanges.pipe(takeUntilDestroyed()).subscribe(() => this.cdr.markForCheck());
+  }
 
   categorias = ['Hardware', 'Software', 'Red', 'Seguridad'];
   prioridades = ['Baja', 'Media', 'Alta', 'Crítica'];
@@ -113,6 +120,7 @@ export class NuevaIncidenciaPage {
     this.incidenciasService.create(this.form.value).subscribe({
       next: async () => {
         this.isSubmitting = false;
+        this.cdr.markForCheck();
         const toast = await this.toastCtrl.create({
           message: 'Incidencia creada correctamente.',
           duration: 2500,
@@ -124,6 +132,7 @@ export class NuevaIncidenciaPage {
       },
       error: async () => {
         this.isSubmitting = false;
+        this.cdr.markForCheck();
         const toast = await this.toastCtrl.create({
           message: 'Error al crear la incidencia.',
           duration: 3000,
