@@ -140,8 +140,8 @@ Ocultar no es proteger: `onDelete()` vuelve a comprobar el permiso (*defensa en 
 La autorización en el cliente es una mejora de **UX y de defensa en profundidad, no la barrera definitiva**. En esta versión de demostración:
 
 - Los tokens se firman en el propio cliente, con una clave de demo incluida en el bundle. En producción los firmaría el servidor (por ejemplo Supabase Auth) y el refresh token iría en una cookie `HttpOnly; Secure; SameSite=Strict`, inaccesible desde JavaScript.
-- Las políticas RLS de Supabase permiten leer, crear y borrar con la clave pública. El siguiente paso es mover la matriz de permisos a políticas RLS basadas en el claim `rol` del JWT, para que un 403 real venga del servidor. El `errorInterceptor` ya está preparado para ese caso.
+- Las políticas RLS de Supabase permiten leer, crear y borrar incidencias, y subir fotos al bucket `incidencias`, con la clave pública. El siguiente paso es mover la matriz de permisos a políticas RLS basadas en el claim `rol` del JWT, para que un 403 real venga del servidor. El `errorInterceptor` ya está preparado para ese caso.
 
 ### Verificación
 
-Hay pruebas unitarias en Vitest (49 en total, todas superadas) que cubren: `authGuard` (con `returnUrl`), `rbacGuard` (`canMatch`, con los 3 roles), `pendingChangesGuard`, `errorInterceptor` (401 con renovación y reintento, 401 sin renovación y 403), la directiva `*appHasPermiso` y `AuthService` (permisos por rol, renovación del token, rechazo de un refresh token usado como token de acceso y rechazo de un token manipulado). La CI de GitHub Actions las ejecuta en cada push.
+Hay pruebas unitarias en Vitest (52 en la aplicación, todas superadas). Las de seguridad cubren: `authGuard` (con `returnUrl`), `rbacGuard` (`canMatch`, con los 3 roles), `pendingChangesGuard`, `errorInterceptor` (401 con renovación y reintento, 401 sin renovación y 403), la directiva `*appHasPermiso` y `AuthService` (permisos por rol, renovación del token, rechazo de un refresh token usado como token de acceso y rechazo de un token manipulado). La CI de GitHub Actions las ejecuta en cada push.
