@@ -1,15 +1,17 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import {
   IonContent, IonCard, IonCardHeader, IonCardContent, IonItem, IonInput, IonButton,
   IonText, IonSpinner, IonNote, ViewWillEnter,
 } from '@ionic/angular';
 import { AuthService } from '../../core/services/auth.service';
+import { UserRole } from '../../core/models/user.model';
 
 /**
  * Página de inicio de sesión.
- * Formulario reactivo con validaciones y redirección según el rol.
+ * Formulario reactivo con validaciones. Tras entrar vuelve a la URL que se pidió
+ * antes del login (?returnUrl) o, si no hay, a la pantalla inicial de su rol.
  */
 @Component({
   selector: 'app-login',
@@ -25,6 +27,7 @@ export class LoginPage implements ViewWillEnter {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
 
   loginForm: FormGroup = this.fb.group({
@@ -69,7 +72,13 @@ export class LoginPage implements ViewWillEnter {
     });
   }
 
-  private irSegunRol(rol: string): void {
-    this.router.navigate([rol === 'admin' ? '/dashboard' : '/incidencias'], { replaceUrl: true });
+  private irSegunRol(rol: UserRole): void {
+    const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+    // Solo rutas internas (empiezan por una sola /): evita redirecciones a otros dominios
+    if (returnUrl && returnUrl.startsWith('/') && !returnUrl.startsWith('//') && !returnUrl.startsWith('/login')) {
+      this.router.navigateByUrl(returnUrl, { replaceUrl: true });
+      return;
+    }
+    this.router.navigate([rol === 'usuario' ? '/incidencias' : '/dashboard'], { replaceUrl: true });
   }
 }

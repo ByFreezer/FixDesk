@@ -1,12 +1,15 @@
 import { Routes } from '@angular/router';
 import { authGuard } from './core/guards/auth.guard';
-import { roleGuard } from './core/guards/role.guard';
+import { rbacGuard } from './core/guards/rbac.guard';
+import { pendingChangesGuard } from './core/guards/pending-changes.guard';
 
 /**
  * Rutas de la aplicación.
  * Todas usan carga diferida (lazy loading) con loadComponent.
- * - authGuard: solo usuarios logueados.
- * - roleGuard + data.role: solo el rol indicado (dashboard = admin).
+ * - authGuard (canActivate): solo usuarios logueados; si no, login con ?returnUrl.
+ * - rbacGuard (canMatch) + data.permiso: solo los roles con ese permiso (ver PERMISOS_POR_ROL).
+ *   Al ser canMatch la ruta ni siquiera se empareja y su chunk no se precarga para ese rol.
+ * - pendingChangesGuard (canDeactivate): avisa antes de abandonar un formulario a medias.
  */
 export const routes: Routes = [
   {
@@ -27,6 +30,7 @@ export const routes: Routes = [
   {
     path: 'incidencias/nueva',
     canActivate: [authGuard],
+    canDeactivate: [pendingChangesGuard],
     loadComponent: () =>
       import('./features/incidencias/nueva-incidencia/nueva-incidencia.page').then(
         (m) => m.NuevaIncidenciaPage
@@ -34,8 +38,8 @@ export const routes: Routes = [
   },
   {
     path: 'dashboard',
-    canActivate: [roleGuard],
-    data: { role: 'admin' },
+    canMatch: [rbacGuard],
+    data: { permiso: 'dashboard:ver' },
     loadComponent: () => import('./features/dashboard/dashboard.page').then((m) => m.DashboardPage),
   },
   {

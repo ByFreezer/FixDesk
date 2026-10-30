@@ -3,7 +3,7 @@ import { crearToken, verificarToken, TokenPayload } from './jwt';
 describe('jwt', () => {
   const clave = 'clave-test';
   const ahora = Math.floor(Date.now() / 1000);
-  const payload: TokenPayload = { sub: 'u1', email: 'a@b.com', nombre: 'Test', rol: 'usuario', iat: ahora, exp: ahora + 60 };
+  const payload: TokenPayload = { sub: 'u1', email: 'a@b.com', nombre: 'Test', rol: 'usuario', permisos: ['incidencias:ver'], typ: 'access', iat: ahora, exp: ahora + 60 };
 
   it('genera un token con 3 partes', () => {
     expect(crearToken(payload, clave).split('.').length).toBe(3);

@@ -44,3 +44,33 @@ ion-item {
   font-size: 1.4rem;
   color: #1a3a5c;
 }
+
+.foto {
+  margin: 16px 0 8px;
+  padding: 0 16px;
+}
+
+.foto-titulo {
+  margin: 0 0 8px;
+  color: var(--ion-color-medium-shade);
+}
+
+.foto-preview {
+  display: block;
+  max-width: 100%;
+  max-height: 240px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: #f1f3f5;
+}
+
+.foto-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.foto-ayuda {
+  display: block;
+  margin-top: 4px;
+}

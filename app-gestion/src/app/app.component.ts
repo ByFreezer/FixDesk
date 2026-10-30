@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import {
   IonApp, IonSplitPane, IonMenu, IonContent, IonList, IonListHeader, IonNote,
@@ -10,19 +10,21 @@ import {
   helpCircleOutline, helpCircleSharp, logOutOutline, alertCircle, folderOpen, checkmarkCircle,
   timeOutline, add, downloadOutline, documentTextOutline, trashOutline, searchOutline,
 } from 'ionicons/icons';
-import { Subscription } from 'rxjs';
 import { AuthService } from './core/services/auth.service';
-import { User } from './core/models/user.model';
+import { AuthStore } from './core/state/auth.store';
+import { NOMBRE_ROL, Permiso } from './core/models/user.model';
 
 interface MenuPage {
   title: string;
   url: string;
   icon: string;
-  soloAdmin: boolean;
+  /** Permiso necesario para ver la opción (sin él, la opción no aparece) */
+  permiso: Permiso;
 }
 
 /**
  * Componente raíz: menú lateral (Side Menu) que cambia según el rol.
+ * El menú es una signal computada a partir de los permisos del AuthStore.
  */
 @Component({
   selector: 'app-root',
@@ -34,24 +36,26 @@ interface MenuPage {
     IonButton, IonBadge,
   ],
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent {
   private auth = inject(AuthService);
+  private store = inject(AuthStore);
   private router = inject(Router);
-  private cdr = inject(ChangeDetectorRef);
-  private sub: Subscription;
 
   /** Usuario logueado (null si no hay sesión) */
-  user: User | null = null;
+  readonly user = this.store.user;
+  readonly nombreRol = NOMBRE_ROL;
 
   private readonly todasLasPaginas: MenuPage[] = [
-    { title: 'Incidencias', url: '/incidencias', icon: 'list', soloAdmin: false },
-    { title: 'Nueva incidencia', url: '/incidencias/nueva', icon: 'add-circle', soloAdmin: false },
-    { title: 'Dashboard', url: '/dashboard', icon: 'stats-chart', soloAdmin: true },
-    { title: 'Ayuda', url: '/ayuda', icon: 'help-circle', soloAdmin: false },
+    { title: 'Incidencias', url: '/incidencias', icon: 'list', permiso: 'incidencias:ver' },
+    { title: 'Nueva incidencia', url: '/incidencias/nueva', icon: 'add-circle', permiso: 'incidencias:crear' },
+    { title: 'Dashboard', url: '/dashboard', icon: 'stats-chart', permiso: 'dashboard:ver' },
+    { title: 'Ayuda', url: '/ayuda', icon: 'help-circle', permiso: 'incidencias:ver' },
   ];
 
-  /** Páginas visibles según el rol del usuario */
-  paginas: MenuPage[] = [];
+  /** Páginas visibles según los permisos del rol (se recalcula sola al cambiar la sesión) */
+  readonly paginas = computed(() =>
+    this.todasLasPaginas.filter((p) => this.store.permisos().includes(p.permiso))
+  );
 
   constructor() {
     addIcons({
@@ -60,21 +64,11 @@ export class AppComponent implements OnDestroy {
       'folder-open': folderOpen, 'checkmark-circle': checkmarkCircle, 'time-outline': timeOutline,
       add, downloadOutline, documentTextOutline, trashOutline, searchOutline,
     });
-
-    this.sub = this.auth.currentUser$.subscribe((u) => {
-      this.user = u;
-      this.paginas = this.todasLasPaginas.filter((p) => !p.soloAdmin || u?.rol === 'admin');
-      this.cdr.markForCheck();
-    });
   }
 
   /** Cierra la sesión y vuelve al login */
   logout(): void {
     this.auth.logout();
     this.router.navigate(['/login']);
-  }
-
-  ngOnDestroy(): void {
-    this.sub.unsubscribe();
   }
 }

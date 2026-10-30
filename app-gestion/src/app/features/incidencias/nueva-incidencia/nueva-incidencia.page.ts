@@ -31,6 +31,7 @@ import {
 import { Observable, map, of } from 'rxjs';
 import { catchError, debounceTime, switchMap, first } from 'rxjs/operators';
 import { IncidenciasService } from '../../../core/services/incidencias.service';
+import { ConCambiosPendientes } from '../../../core/guards/pending-changes.guard';
 
 @Component({
   selector: 'app-nueva-incidencia',
@@ -56,7 +57,7 @@ import { IncidenciasService } from '../../../core/services/incidencias.service';
     IonNote,
   ],
 })
-export class NuevaIncidenciaPage {
+export class NuevaIncidenciaPage implements ConCambiosPendientes {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private incidenciasService = inject(IncidenciasService);
@@ -64,6 +65,8 @@ export class NuevaIncidenciaPage {
   private cdr = inject(ChangeDetectorRef);
 
   isSubmitting = false;
+  /** Se marca al guardar para que el aviso de cambios pendientes no salte */
+  private guardado = false;
 
   form: FormGroup = this.fb.group({
     codigo: [
@@ -87,6 +90,46 @@ export class NuevaIncidenciaPage {
   categorias = ['Hardware', 'Software', 'Red', 'Seguridad'];
   prioridades = ['Baja', 'Media', 'Alta', 'Crítica'];
   estados = ['Abierta', 'En Proceso', 'Cerrada'];
+
+  /** Foto opcional elegida por el usuario (no forma parte del FormGroup) */
+  foto: File | null = null;
+  /** URL local para previsualizar la foto antes de subirla */
+  fotoPreview: string | null = null;
+  fotoError = '';
+
+  /** Lo consulta pendingChangesGuard (canDeactivate) al salir de la página */
+  tieneCambiosSinGuardar(): boolean {
+    return (this.form.dirty || this.foto !== null) && !this.guardado;
+  }
+
+  /**
+   * Valida la foto elegida (tipo y tamaño) y genera la previsualización.
+   * @param event Evento change del input de tipo file
+   */
+  onFotoSeleccionada(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const archivo = input.files?.[0];
+    input.value = '';
+    if (!archivo) return;
+
+    if (!IncidenciasService.TIPOS_IMAGEN.includes(archivo.type)) {
+      this.fotoError = 'Formato no admitido. Usa JPG, PNG o WEBP.';
+    } else if (archivo.size > IncidenciasService.MAX_IMAGEN_BYTES) {
+      this.fotoError = 'La foto no puede superar los 2 MB.';
+    } else {
+      this.quitarFoto();
+      this.foto = archivo;
+      this.fotoPreview = URL.createObjectURL(archivo);
+    }
+    this.cdr.markForCheck();
+  }
+
+  quitarFoto(): void {
+    if (this.fotoPreview) URL.revokeObjectURL(this.fotoPreview);
+    this.foto = null;
+    this.fotoPreview = null;
+    this.fotoError = '';
+  }
 
   /**
    * Validador asíncrono que verifica unicidad del código de incidencia
@@ -117,14 +160,18 @@ export class NuevaIncidenciaPage {
 
     this.isSubmitting = true;
 
-    this.incidenciasService.create(this.form.value).subscribe({
-      next: async () => {
+    this.incidenciasService.create(this.form.value, this.foto).subscribe({
+      next: async (creada) => {
         this.isSubmitting = false;
+        this.guardado = true;
         this.cdr.markForCheck();
+        const sinFoto = this.foto && !creada.imagenUrl;
         const toast = await this.toastCtrl.create({
-          message: 'Incidencia creada correctamente.',
+          message: sinFoto
+            ? 'Incidencia creada, pero no se pudo subir la foto.'
+            : 'Incidencia creada correctamente.',
           duration: 2500,
-          color: 'success',
+          color: sinFoto ? 'warning' : 'success',
           position: 'top',
         });
         await toast.present();

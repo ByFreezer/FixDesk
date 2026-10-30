@@ -41,7 +41,7 @@
       </ion-row>
     </ion-grid>
 
-    <div class="acciones" role="group" aria-label="Exportar informe">
+    <div *appHasPermiso="'incidencias:exportar'" class="acciones" role="group" aria-label="Exportar informe">
       <ion-button fill="outline" (click)="exportCsv()">
         <ion-icon slot="start" name="download-outline" aria-hidden="true"></ion-icon>
         Exportar CSV
@@ -55,7 +55,7 @@
     <app-data-table
       [data]="incidencias"
       [columns]="columns"
-      [canDelete]="esAdmin"
+      [canDelete]="puedeBorrar()"
       (rowSelected)="onSelect($event)"
       (deleteClicked)="onDelete($event)"
     ></app-data-table>
@@ -65,6 +65,9 @@
         <h2>{{ seleccionada.codigo }} · {{ seleccionada.titulo }}</h2>
         <p>{{ seleccionada.descripcion }}</p>
         <p><strong>Responsable:</strong> {{ seleccionada.usuario }}</p>
+        @if (seleccionada.imagenUrl) {
+          <img class="detalle-foto" [src]="seleccionada.imagenUrl" [alt]="'Foto adjunta a la incidencia ' + seleccionada.codigo" loading="lazy" />
+        }
       </section>
     }
   }

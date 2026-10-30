@@ -175,6 +175,32 @@
       </ion-note>
     }
 
+    <!-- Foto (opcional, se sube a Supabase Storage) -->
+    <section class="foto" aria-label="Foto de la incidencia">
+      <p class="foto-titulo">Foto (opcional)</p>
+      <input
+        #selectorFoto
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="environment"
+        hidden
+        (change)="onFotoSeleccionada($event)"
+      />
+      @if (fotoPreview) {
+        <img class="foto-preview" [src]="fotoPreview" alt="Vista previa de la foto adjunta" />
+        <div class="foto-acciones">
+          <ion-button fill="outline" size="small" (click)="selectorFoto.click()">Cambiar foto</ion-button>
+          <ion-button fill="clear" size="small" color="danger" (click)="quitarFoto()">Quitar</ion-button>
+        </div>
+      } @else {
+        <ion-button fill="outline" size="small" (click)="selectorFoto.click()">Adjuntar foto</ion-button>
+        <ion-note color="medium" class="foto-ayuda">JPG, PNG o WEBP · máx. 2 MB</ion-note>
+      }
+      @if (fotoError) {
+        <ion-note color="danger" class="validation-error" role="alert" aria-live="polite">{{ fotoError }}</ion-note>
+      }
+    </section>
+
     <!-- Submit -->
     <ion-button
       type="submit"
