@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, of, throwError } from 'rxjs';
-import { map, catchError, delay, tap } from 'rxjs/operators';
+import { map, catchError, delay, switchMap, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { CategoriaIncidencia, EstadoIncidencia, Incidencia, PrioridadIncidencia } from '../models/incidencia.model';
 
@@ -16,12 +16,13 @@ interface FilaIncidencia {
   descripcion?: string | null;
   usuario?: string | null;
   fecha: string;
+  imagen_url?: string | null;
 }
 
 /**
  * Servicio de incidencias (fuente SQL).
  * Consume la API REST de Supabase (PostgreSQL) con HttpClient; las cabeceras
- * las añade el interceptor. Si Supabase falla o la tabla está vacía usa datos
+ * las añade el interceptor. Las fotos se guardan en Supabase Storage (bucket "incidencias"). Si Supabase falla o la tabla está vacía usa datos
  * sintéticos de respaldo, así la app nunca se queda en blanco.
  */
 @Injectable({ providedIn: 'root' })
@@ -98,6 +99,11 @@ export class IncidenciasService {
 
   private http = inject(HttpClient);
   private readonly url = `${environment.supabaseUrl}/rest/v1/incidencias`;
+  private readonly storageUrl = `${environment.supabaseUrl}/storage/v1/object/incidencias`;
+
+  /** Tipos y tamaño de foto admitidos (los mismos límites que el bucket) */
+  static readonly TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp'];
+  static readonly MAX_IMAGEN_BYTES = 2 * 1024 * 1024;
 
   /**
    * Obtiene todas las incidencias de forma asíncrona.
@@ -126,11 +132,40 @@ export class IncidenciasService {
   }
 
   /**
-   * Crea una nueva incidencia.
-   * Si la tabla todavía no tiene todas las columnas, se guardan solo las básicas.
-   * @param nueva Datos del formulario
+   * Sube una foto al bucket "incidencias" de Supabase Storage.
+   * @param codigo Código de la incidencia (se usa como carpeta)
+   * @param foto Imagen elegida en el formulario
+   * @returns URL pública de la foto
    */
-  create(nueva: Omit<Incidencia, 'id' | 'fecha'> & { fecha?: string }): Observable<Incidencia> {
+  subirImagen(codigo: string, foto: File): Observable<string> {
+    const ext = foto.type.split('/')[1] === 'jpeg' ? 'jpg' : foto.type.split('/')[1];
+    const ruta = `${codigo}/${Date.now()}.${ext}`;
+    return this.http
+      .post(`${this.storageUrl}/${ruta}`, foto, { headers: { 'Content-Type': foto.type } })
+      .pipe(map(() => `${environment.supabaseUrl}/storage/v1/object/public/incidencias/${ruta}`));
+  }
+
+  /**
+   * Crea una nueva incidencia, subiendo antes la foto si se adjunta.
+   * Si la foto no se puede subir, la incidencia se guarda igualmente sin ella
+   * (el resultado no trae imagenUrl y la página avisa).
+   * @param nueva Datos del formulario
+   * @param foto Foto opcional
+   */
+  create(nueva: Omit<Incidencia, 'id' | 'fecha'> & { fecha?: string }, foto?: File | null): Observable<Incidencia> {
+    if (!foto) return this.guardar(nueva);
+    const codigo = (nueva.codigo || '').toUpperCase() || `INC-${Math.floor(1000 + Math.random() * 9000)}`;
+    return this.subirImagen(codigo, foto).pipe(
+      catchError(() => of(undefined)),
+      switchMap((imagenUrl) => this.guardar({ ...nueva, codigo, imagenUrl }))
+    );
+  }
+
+  /**
+   * Inserta la incidencia en la tabla.
+   * Si la tabla todavía no tiene todas las columnas, se guardan solo las básicas.
+   */
+  private guardar(nueva: Omit<Incidencia, 'id' | 'fecha'> & { fecha?: string }): Observable<Incidencia> {
     const codigo = (nueva.codigo || `INC-${Math.floor(1000 + Math.random() * 9000)}`).toUpperCase();
     const registro: Incidencia = { ...nueva, id: codigo, codigo, fecha: nueva.fecha || new Date().toISOString().split('T')[0] };
     this.incidencias = [registro, ...this.incidencias];
@@ -138,6 +173,7 @@ export class IncidenciasService {
     const completa = {
       codigo, titulo: registro.titulo, categoria: registro.categoria, prioridad: registro.prioridad,
       estado: registro.estado, descripcion: registro.descripcion, usuario: registro.usuario, fecha: registro.fecha,
+      ...(registro.imagenUrl ? { imagen_url: registro.imagenUrl } : {}),
     };
     const basica = { titulo: registro.titulo, categoria: registro.categoria, estado: registro.estado, fecha: registro.fecha };
     const cabeceras = { Prefer: 'return=representation' };
@@ -179,6 +215,7 @@ export class IncidenciasService {
       descripcion: f.descripcion || '',
       usuario: f.usuario || '',
       fecha: f.fecha,
+      imagenUrl: f.imagen_url || undefined,
     };
   }
 }

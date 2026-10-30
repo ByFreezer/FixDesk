@@ -65,6 +65,9 @@
         <h2>{{ seleccionada.codigo }} · {{ seleccionada.titulo }}</h2>
         <p>{{ seleccionada.descripcion }}</p>
         <p><strong>Responsable:</strong> {{ seleccionada.usuario }}</p>
+        @if (seleccionada.imagenUrl) {
+          <img class="detalle-foto" [src]="seleccionada.imagenUrl" [alt]="'Foto adjunta a la incidencia ' + seleccionada.codigo" loading="lazy" />
+        }
       </section>
     }
   }

@@ -28,3 +28,20 @@ insert into public.incidencias (codigo, titulo, categoria, prioridad, estado, de
 ('INC-1007','Impresora de planta 2 no imprime en red','Hardware','Baja','Abierta','La impresora no responde a los trabajos enviados desde la VLAN de oficina.','usuario@empresa.com','2026-10-29'),
 ('INC-1008','Intentos de acceso sospechosos a la VPN','Seguridad','Alta','En Proceso','Se detectan múltiples intentos fallidos de autenticación desde IPs externas.','seguridad@empresa.com','2026-10-29')
 on conflict (codigo) do nothing;
+
+-- 4) Fotos de las incidencias (Supabase Storage)
+--    Columna con la URL pública de la foto y bucket "incidencias" (público, máx. 2 MB, solo imágenes).
+alter table public.incidencias add column if not exists imagen_url text;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('incidencias', 'incidencias', true, 2097152, array['image/jpeg', 'image/png', 'image/webp'])
+on conflict (id) do update
+  set public = excluded.public,
+      file_size_limit = excluded.file_size_limit,
+      allowed_mime_types = excluded.allowed_mime_types;
+
+-- Políticas de la demo: cualquiera con la clave pública puede ver y subir fotos, solo en este bucket
+drop policy if exists "demo_fotos_select" on storage.objects;
+drop policy if exists "demo_fotos_insert" on storage.objects;
+create policy "demo_fotos_select" on storage.objects for select using (bucket_id = 'incidencias');
+create policy "demo_fotos_insert" on storage.objects for insert with check (bucket_id = 'incidencias');

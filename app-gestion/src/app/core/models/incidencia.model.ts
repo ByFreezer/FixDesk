@@ -12,4 +12,6 @@ export interface Incidencia {
   descripcion: string;
   usuario: string;
   fecha: string;
+  /** URL pública de la foto adjunta (Supabase Storage), si la hay */
+  imagenUrl?: string;
 }

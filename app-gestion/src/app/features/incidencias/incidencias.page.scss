@@ -55,3 +55,12 @@
     margin-top: 0;
   }
 }
+
+.detalle-foto {
+  display: block;
+  max-width: 100%;
+  max-height: 320px;
+  margin-top: 8px;
+  border-radius: 8px;
+  object-fit: contain;
+}
