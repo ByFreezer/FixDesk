@@ -6,15 +6,19 @@ import { AuthService } from '../services/auth.service';
 
 describe('authGuard', () => {
   const ejecutar = () =>
-    TestBed.runInInjectionContext(() => authGuard({} as ActivatedRouteSnapshot, {} as RouterStateSnapshot));
+    TestBed.runInInjectionContext(() =>
+      authGuard({} as ActivatedRouteSnapshot, { url: '/incidencias/nueva' } as RouterStateSnapshot)
+    );
 
   beforeEach(() => {
     sessionStorage.clear();
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
   });
 
-  it('redirige al login si no hay sesión', () => {
-    expect(ejecutar()).toBeInstanceOf(UrlTree);
+  it('redirige al login si no hay sesión, guardando la URL pedida', () => {
+    const res = ejecutar();
+    expect(res).toBeInstanceOf(UrlTree);
+    expect(String(res)).toBe('/login?returnUrl=%2Fincidencias%2Fnueva');
   });
 
   it('deja pasar si hay sesión', async () => {

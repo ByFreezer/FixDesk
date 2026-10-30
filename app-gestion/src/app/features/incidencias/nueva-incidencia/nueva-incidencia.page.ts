@@ -31,6 +31,7 @@ import {
 import { Observable, map, of } from 'rxjs';
 import { catchError, debounceTime, switchMap, first } from 'rxjs/operators';
 import { IncidenciasService } from '../../../core/services/incidencias.service';
+import { ConCambiosPendientes } from '../../../core/guards/pending-changes.guard';
 
 @Component({
   selector: 'app-nueva-incidencia',
@@ -56,7 +57,7 @@ import { IncidenciasService } from '../../../core/services/incidencias.service';
     IonNote,
   ],
 })
-export class NuevaIncidenciaPage {
+export class NuevaIncidenciaPage implements ConCambiosPendientes {
   private fb = inject(FormBuilder);
   private router = inject(Router);
   private incidenciasService = inject(IncidenciasService);
@@ -64,6 +65,8 @@ export class NuevaIncidenciaPage {
   private cdr = inject(ChangeDetectorRef);
 
   isSubmitting = false;
+  /** Se marca al guardar para que el aviso de cambios pendientes no salte */
+  private guardado = false;
 
   form: FormGroup = this.fb.group({
     codigo: [
@@ -87,6 +90,11 @@ export class NuevaIncidenciaPage {
   categorias = ['Hardware', 'Software', 'Red', 'Seguridad'];
   prioridades = ['Baja', 'Media', 'Alta', 'Crítica'];
   estados = ['Abierta', 'En Proceso', 'Cerrada'];
+
+  /** Lo consulta pendingChangesGuard (canDeactivate) al salir de la página */
+  tieneCambiosSinGuardar(): boolean {
+    return this.form.dirty && !this.guardado;
+  }
 
   /**
    * Validador asíncrono que verifica unicidad del código de incidencia
@@ -120,6 +128,7 @@ export class NuevaIncidenciaPage {
     this.incidenciasService.create(this.form.value).subscribe({
       next: async () => {
         this.isSubmitting = false;
+        this.guardado = true;
         this.cdr.markForCheck();
         const toast = await this.toastCtrl.create({
           message: 'Incidencia creada correctamente.',

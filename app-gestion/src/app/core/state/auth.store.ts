@@ -1,5 +1,5 @@
 import { Injectable, computed, signal } from '@angular/core';
-import { User } from '../models/user.model';
+import { PERMISOS_POR_ROL, Permiso, User, UserRole } from '../models/user.model';
 
 /**
  * Estado global de autenticación.
@@ -17,6 +17,7 @@ export type AuthAction =
   | { type: '[Auth] Login' }
   | { type: '[Auth] Login Success'; user: User; token: string }
   | { type: '[Auth] Login Failure'; error: string }
+  | { type: '[Auth] Token Refreshed'; token: string }
   | { type: '[Auth] Logout' };
 
 export const initialAuthState: AuthState = {
@@ -38,6 +39,8 @@ export function authReducer(state: AuthState, action: AuthAction): AuthState {
       return { user: action.user, token: action.token, loading: false, error: null };
     case '[Auth] Login Failure':
       return { ...initialAuthState, error: action.error };
+    case '[Auth] Token Refreshed':
+      return { ...state, token: action.token };
     case '[Auth] Logout':
       return { ...initialAuthState };
     default:
@@ -63,6 +66,12 @@ export class AuthStore {
   readonly error = computed(() => this._state().error);
   readonly isLoggedIn = computed(() => this._state().user !== null);
   readonly isAdmin = computed(() => this._state().user?.rol === 'admin');
+  readonly rol = computed<UserRole | null>(() => this._state().user?.rol ?? null);
+  /** Permisos del usuario actual según la matriz RBAC (vacío si no hay sesión) */
+  readonly permisos = computed<readonly Permiso[]>(() => {
+    const rol = this.rol();
+    return rol ? PERMISOS_POR_ROL[rol] : [];
+  });
 
   /** Única forma de cambiar el estado */
   dispatch(action: AuthAction): void {

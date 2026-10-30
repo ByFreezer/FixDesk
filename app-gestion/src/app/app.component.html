@@ -1,7 +1,7 @@
 <ion-app>
   <a class="skip-link" href="#main-content">Saltar al contenido</a>
   <ion-split-pane contentId="main-content">
-    <ion-menu contentId="main-content" type="overlay" [disabled]="!user" aria-label="Menú principal">
+    <ion-menu contentId="main-content" type="overlay" [disabled]="!user()" aria-label="Menú principal">
       <ion-content>
         <div class="menu-brand">
           <img src="assets/img/logo.svg" alt="Logotipo de FixDesk" width="48" height="48" />
@@ -12,18 +12,18 @@
         </div>
 
         <ion-list id="menu-list">
-          @if (user) {
+          @if (user(); as user) {
             <ion-list-header>{{ user.nombre }}</ion-list-header>
             <ion-note>
               {{ user.email }}
-              <ion-badge [color]="user.rol === 'admin' ? 'danger' : 'primary'">
-                {{ user.rol === 'admin' ? 'Administrador' : 'Usuario' }}
+              <ion-badge [color]="user.rol === 'admin' ? 'danger' : user.rol === 'tecnico' ? 'tertiary' : 'primary'">
+                {{ nombreRol[user.rol] }}
               </ion-badge>
             </ion-note>
           }
 
           <nav aria-label="Navegación principal">
-            @for (p of paginas; track p.url) {
+            @for (p of paginas(); track p.url) {
               <ion-menu-toggle [autoHide]="false">
                 <ion-item
                   routerDirection="root"

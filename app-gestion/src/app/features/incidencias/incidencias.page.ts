@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, OnDestroy, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, OnDestroy, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonMenuButton, IonFab,
@@ -10,7 +10,8 @@ import { StatWidgetComponent } from '../../shared/components/stat-widget/stat-wi
 import { Column, DataTableComponent } from '../../shared/components/data-table/data-table.component';
 import { IncidenciasService } from '../../core/services/incidencias.service';
 import { ExportService } from '../../core/services/export.service';
-import { AuthService } from '../../core/services/auth.service';
+import { AuthStore } from '../../core/state/auth.store';
+import { HasPermisoDirective } from '../../shared/directives/has-permiso.directive';
 import { Incidencia } from '../../core/models/incidencia.model';
 
 /**
@@ -25,13 +26,13 @@ import { Incidencia } from '../../core/models/incidencia.model';
   imports: [
     IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonMenuButton, IonFab,
     IonFabButton, IonIcon, IonSpinner, IonText, IonGrid, IonRow, IonCol, IonButton,
-    StatWidgetComponent, DataTableComponent,
+    StatWidgetComponent, DataTableComponent, HasPermisoDirective,
   ],
 })
 export class IncidenciasPage implements ViewDidEnter, OnDestroy {
   private incSrv = inject(IncidenciasService);
   private exportSrv = inject(ExportService);
-  private auth = inject(AuthService);
+  private store = inject(AuthStore);
   private router = inject(Router);
   private alertCtrl = inject(AlertController);
   private toastCtrl = inject(ToastController);
@@ -52,10 +53,8 @@ export class IncidenciasPage implements ViewDidEnter, OnDestroy {
   loading = true;
   error = '';
 
-  /** Solo el administrador puede borrar */
-  get esAdmin(): boolean {
-    return this.auth.isAdmin();
-  }
+  /** Signal computada: solo los roles con permiso de borrado ven el botón Eliminar */
+  readonly puedeBorrar = computed(() => this.store.permisos().includes('incidencias:borrar'));
 
   get abiertas(): number {
     return this.incidencias.filter((i) => i.estado === 'Abierta').length;
@@ -96,6 +95,8 @@ export class IncidenciasPage implements ViewDidEnter, OnDestroy {
 
   /** Evento (Output) deleteClicked del DataTable */
   async onDelete(row: Incidencia): Promise<void> {
+    // Defensa en profundidad: aunque el botón esté oculto, se vuelve a comprobar el permiso
+    if (!this.puedeBorrar()) return;
     const alert = await this.alertCtrl.create({
       header: 'Eliminar incidencia',
       message: `¿Seguro que quieres eliminar ${row.codigo}?`,

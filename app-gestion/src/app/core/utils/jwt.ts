@@ -1,12 +1,17 @@
+import { Permiso, UserRole } from '../models/user.model';
 import { hmacSha256, utf8Bytes } from './sha256';
 
-/** Datos que guardamos dentro del token */
+/** Datos (claims) que guardamos dentro del token */
 export interface TokenPayload {
   /** Id del usuario */
   sub: string;
   email: string;
   nombre: string;
-  rol: 'admin' | 'usuario';
+  rol: UserRole;
+  /** Permisos del rol en el momento de emitir el token */
+  permisos: Permiso[];
+  /** access = token de corta duración para las peticiones; refresh = sirve solo para renovarlo */
+  typ: 'access' | 'refresh';
   /** Fecha de creación (segundos) */
   iat: number;
   /** Fecha de caducidad (segundos) */
